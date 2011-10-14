@@ -1,0 +1,9 @@
+{% extends '_layout.html' %}
+
+{% block content %}
+<div>
+<form method="post" action="{{ url_for('root.oauth') }}">
+<input type="image" name="oauth" value="oauth" src="{{ url_for('static', filename='images/sign-in-with-twitter-l.png') }}" />
+</form>
+</div><!-- /div.content -->
+{% endblock %}

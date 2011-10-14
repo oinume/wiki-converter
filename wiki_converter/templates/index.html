@@ -1,0 +1,17 @@
+{% extends '_layout.html' %}
+
+{% block content %}
+<div class="container">
+<h1>Wikiのソースを入力</h1>
+<form action="/process" method="post">
+<div class="clearfix">
+<div class="input">
+<textarea class="xxlarge" rows="20" cols="100"></textarea>
+</div>
+</div>
+<div class="actions">
+<input class="btn primary" type="submit" value="Save changes">
+</div>
+</form>
+</div><!-- /div.container -->
+{% endblock %}
