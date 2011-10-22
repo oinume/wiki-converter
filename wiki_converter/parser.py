@@ -9,44 +9,81 @@ text = converter.converted_text()
 
 import re
 
-
 class BaseParser(object):
-    def __init__(self):
-        pass
+    def __init__(self, patterns):
+        self.__handler = None
+        for pattern in patterns:
+            pattern['regexp'] = re.compile(pattern['pattern'])
+        self.__patterns = patterns
 
     def parse_text(self, text, handler):
         pass
+
+    def get_handler(self):
+        return self.__handler
 
     def set_handler(self, handler):
-        self.handler = handler
+        self.__handler = handler
+
+    @property
+    def patterns(self):
+        return self.__patterns
+
+    handler = property(get_handler, set_handler)
 
 class PukiwikiParser(BaseParser):
-
     def __init__(self):
-        self.regex = re.compile(r'^\*{1,[\w]*')
-        super(PukiwikiParser, self).__init__()
+        patterns = [
+            { 'pattern': r'^(\*+)(.*)', 'callback': self.heading },
+            { 'pattern': r"'''(.*)'''(.*)", 'callback': self.italic },
+            { 'pattern': r"''(.*)''(.*)", 'callback':  self.strong },
+        ]
+        super(PukiwikiParser, self).__init__(patterns)
         
     def parse_text(self, text, handler):
-        self.set_handler(handler)
+        self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
 
     def parse_line(self, line, handler):
-        char1, char2, char3 = line[0:1], line[0:2], line[0:3]
+        text = line
+        while len(text) != 0:
+            matched = None
+            for pattern in self.patterns:
+                pattern, regexp, callback = pattern['pattern'], pattern['regexp'], pattern['callback']
+                if regexp is None:
+                    print "[warn] regexp is None"
+                    continue
+                if callback is None:
+                    print "[warn] callback is None"
+                    continue
 
-        is_heading = False
-        text = None
-        level = 1
-        if char1 == '*':
-            is_heading, text, level = True, line[1:], 1
-        elif char2 == '**':
-            is_heading, text, level = True, line[2:], 2
-        elif char3 == '***':
-            is_heading, text, level = True, line[2:], 2
-        if is_heading:
-            handler.start_heading(text, level)
-            handler.end_heading(text, level)
+                matched = regexp.match(text)
+                if matched:
+                    # TODO: logger
+                    print "[debug] `%s` matched for `%s`" % (pattern, text)
+                    groups = matched.groups()
+                    text = callback(groups)
+                    break
 
+            if matched is None:
+                text = self.normal_text(text)
+
+    def normal_text(self, text):
+        self.handler.at_normal_text(text)
+        return ''
+
+    def heading(self, groups):
+        self.handler.at_heading(groups[1], len(groups[0]))
+        return ''
+
+    def italic(self, groups):
+        self.handler.at_italic(groups[0])
+        return groups[1]
+
+    def strong(self, groups):
+        self.handler.at_strong(groups[0])
+        return groups[1]
 
 type2parser = {
     'pukiwiki': PukiwikiParser,
@@ -57,4 +94,3 @@ def create_parser(wiki_type):
     if ParserClass is None:
         raise ValueError("Unknown wiki_type:" + wiki_type)
     return ParserClass()
-
