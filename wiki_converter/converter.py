@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from wiki_converter.handler import DefaultHandler
+from wiki_converter.log import create_logger
 
 class ConfluecenConverter(DefaultHandler):
-    def __init__(self):
+    def __init__(self, log=create_logger()):
+        self.__log = log
         self.__converted_text = ''
         self.__current_converted_text = ''
+
+    @property
+    def log(self):
+        return self.__log
 
     def get_converted_text(self):
         return self.__converted_text
@@ -55,6 +61,9 @@ class ConfluecenConverter(DefaultHandler):
         elif level == 5:
             heading = "h5."
         self.append_text_with_line(heading + text)
+
+    def at_list(self, text, types):
+        pass
 
     def at_strong(self, text):
         print "at_strong:" + text

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+LIST_TYPE_BULLET = 1
+LIST_TYPE_NUMBERED = 2
+
 class DefaultHandler(object):
     def __init__():
         pass
@@ -44,18 +47,7 @@ class DefaultHandler(object):
     #
     # lists
     #
-    def at_bullet_list(self, text, level):
-        pass
-    def end_bullet_list(self, text, level):
-        pass
-    def at_numbered_list(self, text, level):
-        pass
-    def end_numbered_list(self, text, level):
-        pass
-    def at_mixed_list(self, text, level, *args):
-        # TODO: どうやって情報を渡す？
-        pass
-    def end_mixed_list(self, text, level, *args):
+    def at_list(self, text, types):
         pass
     
     #

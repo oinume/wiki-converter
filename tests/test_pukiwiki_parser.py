@@ -2,13 +2,15 @@
 
 import unittest
 from nose.tools import eq_, ok_
+from wiki_converter.log import create_logger
 from wiki_converter.parser import PukiwikiParser
 from wiki_converter.converter import ConfluecenConverter
 
 class TestPukiwikiParser(unittest.TestCase):
     def setUp(self):
-        self.parser = PukiwikiParser()
-        self.converter = ConfluecenConverter()
+        self.log = create_logger(True)
+        self.parser = PukiwikiParser(self.log)
+        self.converter = ConfluecenConverter(self.log)
 
     def testHeading(self):
         self.converter.reset_converted_text()
