@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from wiki_converter.handler import DefaultHandler
+from wiki_converter.handler import (
+    DefaultHandler,
+    LIST_TYPE_NUMBERED,
+    LIST_TYPE_BULLET
+)
 from wiki_converter.log import create_logger
 
 class ConfluecenConverter(DefaultHandler):
@@ -45,28 +49,35 @@ class ConfluecenConverter(DefaultHandler):
         self.converted_text = ''
     
     def at_normal_text(self, text):
-        print "at_normal_text:" + text
+        self.log.debug("at_normal_text = `%s`" % (text))
         self.append_text(text)
     
     def at_heading(self, text, level):
         heading = "h1."
         if level == 1:
-            heading = "h1."
-        elif level == 2:
             heading = "h2."
-        elif level == 3:
+        elif level == 2:
             heading = "h3."
-        elif level == 4:
+        elif level == 3:
             heading = "h4."
-        elif level == 5:
+        elif level == 4:
             heading = "h5."
+        elif level == 5:
+            heading = "h6."
         self.append_text_with_line(heading + text)
 
     def at_list(self, text, types):
-        pass
+        self.log.debug("text = `%s`, types = `%s`", text, str(types))
+        for i, type in enumerate(types):
+            if type == LIST_TYPE_BULLET:
+                self.append_text('*')
+            elif type == LIST_TYPE_NUMBERED:
+                self.append_text('#')
+            
+            if i == len(types) - 1:
+                self.append_text_with_line(text)
 
     def at_strong(self, text):
-        print "at_strong:" + text
         self.append_text('*' + text + '*')
 
     def at_italic(self, text):

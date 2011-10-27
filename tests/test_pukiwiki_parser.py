@@ -16,7 +16,7 @@ class TestPukiwikiParser(unittest.TestCase):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"* ヘッディング1", self.converter)
         eq_(
-            u"h1. ヘッディング1\n",
+            u"h2. ヘッディング1\n",
             self.converter.converted_text,
             'heading1'
         )
@@ -24,7 +24,7 @@ class TestPukiwikiParser(unittest.TestCase):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"***ヘッディング3", self.converter)
         eq_(
-            u"h3.ヘッディング3\n",
+            u"h4.ヘッディング3\n",
             self.converter.converted_text,
             'heading3'
         )
@@ -32,7 +32,7 @@ class TestPukiwikiParser(unittest.TestCase):
     def testItalic(self):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"'''Italic text.''' Normal text.", self.converter)
-        print "converted : {%s}" % self.converter.converted_text
+        self.log.debug("converted : `%s`" % self.converter.converted_text)
         eq_(
             u"_Italic text._ Normal text.",
             self.converter.converted_text,
@@ -42,11 +42,34 @@ class TestPukiwikiParser(unittest.TestCase):
     def testStrong(self):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"''Strong text.'' Normal text.", self.converter)
-        print "converted : {%s}" % self.converter.converted_text
+        self.log.debug("converted : `%s`" % self.converter.converted_text)
         eq_(
             u"*Strong text.* Normal text.",
             self.converter.converted_text,
             'strong'
+        )
+
+    def testList(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(u"""\
+- bullet1
+-- bullet2
+-+ bullet + number1
+-+ bullet + number2
++ number1
+""", self.converter)
+
+        self.log.debug("converted : {%s}" % self.converter.converted_text)
+        eq_(
+            u"""\
+* bullet1
+** bullet2
+*# bullet + number1
+*# bullet + number2
+# number1
+""".strip(),
+            self.converter.converted_text.strip(),
+            'list'
         )
 
 #    def testComplex(self):

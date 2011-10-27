@@ -8,6 +8,7 @@ text = converter.converted_text()
 """
 
 import re
+from wiki_converter.common import ParseError
 from wiki_converter.log import create_logger
 from wiki_converter.handler import LIST_TYPE_BULLET, LIST_TYPE_NUMBERED
 
@@ -74,10 +75,10 @@ class PukiwikiParser(BaseParser):
             elif char == '+':
                 types.append(LIST_TYPE_NUMBERED)
             else:
-                raise RuntimeError("Invalid list character: '%s'" % char)
+                raise ParseError("Invalid list character: '%s'" % char)
 
         self.handler.at_list(groups[1], types)
-
+        return ''
 
     def italic(self, groups):
         self.handler.at_italic(groups[0])
