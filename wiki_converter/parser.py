@@ -7,6 +7,15 @@ parser.parse(file, converter)
 text = converter.converted_text()
 """
 
+# blocks
+#  heading
+#  list
+#
+# text effects
+#  italic
+#  strong
+#  strike_through
+
 import re
 from wiki_converter.common import ParseError
 from wiki_converter.log import create_logger
