@@ -29,6 +29,15 @@ class TestPukiwikiParser(unittest.TestCase):
             'heading3'
         )
 
+    def testToc(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(u"#contents", self.converter)
+        eq_(
+            u"h2. ヘッディング1\n",
+            self.converter.converted_text,
+            'heading1'
+        )
+
     def testItalic(self):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"'''Italic text.''' Normal text.", self.converter)

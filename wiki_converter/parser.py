@@ -56,6 +56,7 @@ class PukiwikiParser(BaseParser):
             ##############
             { 'pattern': r'^(\*+)(.*)', 'callback': self.heading },
             { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list },
+            { 'pattern': r'^#contents', 'callback': self.toc },
 
             ##############
             # text effects
@@ -74,6 +75,10 @@ class PukiwikiParser(BaseParser):
 
     def heading(self, groups):
         self.handler.at_heading(groups[1], len(groups[0]))
+        return ''
+
+    def toc(self):
+        self.handler.at_toc()
         return ''
 
     def list(self, groups):
@@ -107,6 +112,7 @@ class PukiwikiParser(BaseParser):
             self.parse_line(line.rstrip(), handler)
 
     def parse_line(self, line, handler):
+        # textにパースする文字列を入れる。これが空になるまでループする
         text = line
         while len(text) != 0:
             matched = None

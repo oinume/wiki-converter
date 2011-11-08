@@ -66,6 +66,9 @@ class ConfluecenConverter(DefaultHandler):
             heading = "h6."
         self.append_text_with_line(heading + text)
 
+    def at_toc(self):
+        self.append_text_with_line('{toc}')
+
     def at_list(self, text, types):
         self.log.debug("text = `%s`, types = `%s`", text, str(types))
         for i, type in enumerate(types):
