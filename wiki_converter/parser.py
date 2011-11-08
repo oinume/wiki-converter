@@ -77,7 +77,7 @@ class PukiwikiParser(BaseParser):
         self.handler.at_heading(groups[1], len(groups[0]))
         return ''
 
-    def toc(self):
+    def toc(self, groups):
         self.handler.at_toc()
         return ''
 
