@@ -57,6 +57,8 @@ class PukiwikiParser(BaseParser):
             { 'pattern': r'^(\*+)(.*)', 'callback': self.heading },
             { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list },
             { 'pattern': r'^#contents', 'callback': self.toc },
+            { 'pattern': r"^\|(.*)\|h$", 'callback': self.table_header_columns },
+            { 'pattern': r"^\|(.*)\|$", 'callback': self.table_columns },
 
             ##############
             # text effects
@@ -94,6 +96,18 @@ class PukiwikiParser(BaseParser):
         self.handler.at_list(groups[1], types)
         return ''
 
+    def table_columns(self, groups):
+        line = groups[0]
+        self.log.debug("line = `%s`" % (line))
+        self.handler.at_table_columns(line.split('|'))
+        return ''
+
+    def table_header_columns(self, groups):
+        line = groups[0]
+        self.log.debug("line = `%s`" % (line))
+        self.handler.at_table_header_columns(line.split('|'))
+        return ''
+
     def italic(self, groups):
         self.handler.at_italic(groups[0])
         return groups[1]
@@ -116,6 +130,7 @@ class PukiwikiParser(BaseParser):
         text = line
         while len(text) != 0:
             matched = None
+
             for pattern in self.patterns:
                 pattern, regexp, callback = pattern['pattern'], pattern['regexp'], pattern['callback']
                 if regexp is None:
@@ -127,12 +142,13 @@ class PukiwikiParser(BaseParser):
 
                 matched = regexp.match(text)
                 if matched:
-                    self.log.debug("[debug] `%s` matched for `%s`" % (pattern, text))
+                    self.log.debug("`%s` matched for `%s`" % (pattern, text))
                     groups = matched.groups()
                     text = callback(groups)
                     break
 
             if matched is None:
+                self.log.debug("normal text = `%s`" % (text))
                 text = self.normal_text(text)
 
 

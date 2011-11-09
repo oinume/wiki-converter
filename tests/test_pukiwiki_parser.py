@@ -38,6 +38,37 @@ class TestPukiwikiParser(unittest.TestCase):
             'toc'
         )
 
+    def testTableColumns(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(u"| ほげ | ふが |", self.converter)
+        eq_(
+            u"| ほげ | ふが |\n",
+            self.converter.converted_text,
+            'table_columns'
+        )
+
+    def testHeaderTableColumns(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(u"| これは | ヘッダー |h", self.converter)
+        eq_(
+            u"|| これは || ヘッダー ||\n",
+            self.converter.converted_text,
+            'table_header_columns'
+        )
+
+    def testTable(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(
+"""| num | text |h
+| 1 | one |""", self.converter)
+
+        eq_(
+"""|| num || text ||
+| 1 | one |\n""",
+            self.converter.converted_text,
+            'table_header_columns'
+        )
+
     def testItalic(self):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"'''Italic text.''' Normal text.", self.converter)

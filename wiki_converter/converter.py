@@ -80,6 +80,15 @@ class ConfluecenConverter(DefaultHandler):
             if i == len(types) - 1:
                 self.append_text_with_line(text)
 
+    def at_table_columns(self, columns):
+        self.log.debug("columns = %s" % (str(columns)))
+        self.append_text_with_line('|' + '|'.join(columns) + '|')
+
+    def at_table_header_columns(self, columns):
+        self.log.debug("columns = %s" % (str(columns)))
+        self.append_text_with_line('||' + '||'.join(columns) + '||')
+
+
     def at_strong(self, text):
         self.append_text('*' + text + '*')
 
