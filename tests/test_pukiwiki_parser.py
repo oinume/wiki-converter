@@ -89,6 +89,16 @@ class TestPukiwikiParser(unittest.TestCase):
             'strong'
         )
 
+    def testLink(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(u"[[リンクテスト|http://www.ameba.jp]]", self.converter)
+        self.log.debug("converted : `%s`" % self.converter.converted_text)
+        eq_(
+            u"[リンクテスト|http//www.ameba.jp]",
+            self.converter.converted_text,
+            'link'
+        )
+
     def testList(self):
         self.converter.reset_converted_text()
         self.parser.parse_text(u"""\
