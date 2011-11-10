@@ -10,11 +10,13 @@ text = converter.converted_text()
 # blocks
 #  heading
 #  list
+#  table
 #
 # text effects
 #  italic
 #  strong
 #  strike_through
+#  link
 
 import re
 from wiki_converter.common import ParseError
@@ -66,6 +68,8 @@ class PukiwikiParser(BaseParser):
             { 'pattern': r"'''(.*)'''(.*)", 'callback': self.italic },
             { 'pattern': r"''(.*)''(.*)", 'callback':  self.strong },
             { 'pattern': r"%%(.*)%%(.*)", 'callback':  self.strike_through },
+            { 'pattern': r"\[\[(.*)\]\](.*)", 'callback': self.link },
+
             # no underline
             
         ]
@@ -118,6 +122,16 @@ class PukiwikiParser(BaseParser):
 
     def strike_through(self, groups):
         self.handler.at_strike_through(groups[0])
+        return groups[1]
+
+    def link(self, groups):
+        self.log.debug("link = `%s`" % (groups[0]))
+        link = groups[0]
+        array = re.split('[\|:>]?', link)
+        text = array[0]
+        url = ''.join(array[1:])
+        self.log.debug("text = `%s`, url = `%s`" % (text, url))
+        self.handler.at_link(text, url)
         return groups[1]
 
     def parse_text(self, text, handler):

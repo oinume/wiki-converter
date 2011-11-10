@@ -96,16 +96,16 @@ class ConfluecenConverter(DefaultHandler):
         self.append_text('_' + text + '_')
 
     def at_strike_through(self, text):
-        self.append('-' + text + '-')
+        self.append_text('-' + text + '-')
 
     def at_underlines(self, text):
-        self.append('+' + text + '+')
+        self.append_text('+' + text + '+')
 
     def at_superscript(self, text):
-        self.append('^' + text + '^')
+        self.append_text('^' + text + '^')
 
     def at_subscript(self, text):
-        self.append('~' + text + '~')
+        self.append_text('~' + text + '~')
 
     def at_monospaced(self, text):
         pass
@@ -114,3 +114,7 @@ class ConfluecenConverter(DefaultHandler):
 
     def at_line_break(self):
         pass
+
+    def at_link(self, text, url):
+        self.append_text('[%s|%s]' % (text, url))
+
