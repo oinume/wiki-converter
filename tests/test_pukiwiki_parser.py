@@ -58,15 +58,36 @@ class TestPukiwikiParser(unittest.TestCase):
 
     def testTable(self):
         self.converter.reset_converted_text()
-        self.parser.parse_text(
-"""| num | text |h
-| 1 | one |""", self.converter)
+        self.parser.parse_text("""\
+| num | text |h
+| 1 | one |
+""".rstrip(), self.converter)
 
-        eq_(
-"""|| num || text ||
-| 1 | one |\n""",
-            self.converter.converted_text,
+        eq_("""\
+|| num || text ||
+| 1 | one |
+""".rstrip(),
+            self.converter.converted_text.rstrip(),
             'table_header_columns'
+        )
+
+    def testFormattedText(self):
+        self.converter.reset_converted_text()
+        self.parser.parse_text(u"""\
+ This is a
+ formatted
+ text.
+""".rstrip(), self.converter)
+        print self.converter.converted_text
+        eq_("""\
+{code}
+This is a
+formatted
+text.
+{code}
+""".rstrip(),
+            self.converter.converted_text.rstrip(),
+            'formatted_text'
         )
 
     def testItalic(self):
@@ -110,15 +131,14 @@ class TestPukiwikiParser(unittest.TestCase):
 """, self.converter)
 
         self.log.debug("converted : {%s}" % self.converter.converted_text)
-        eq_(
-            u"""\
+        eq_(u"""\
 * bullet1
 ** bullet2
 *# bullet + number1
 *# bullet + number2
 # number1
-""".strip(),
-            self.converter.converted_text.strip(),
+""".rstrip(),
+            self.converter.converted_text.rstrip(),
             'list'
         )
 

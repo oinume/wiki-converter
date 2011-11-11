@@ -88,6 +88,11 @@ class ConfluecenConverter(DefaultHandler):
         self.log.debug("columns = %s" % (str(columns)))
         self.append_text_with_line('||' + '||'.join(columns) + '||')
 
+    def at_formatted_lines(self, lines):
+        self.log.debug("lines = `%s`" % (lines))
+        self.append_text_with_line('{code}')
+        self.append_text(lines)
+        self.append_text_with_line('{code}')
 
     def at_strong(self, text):
         self.append_text('*' + text + '*')

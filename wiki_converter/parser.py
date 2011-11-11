@@ -56,26 +56,29 @@ class PukiwikiParser(BaseParser):
             ##############
             # blocks
             ##############
-            { 'pattern': r'^(\*+)(.*)', 'callback': self.heading },
-            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list },
-            { 'pattern': r'^#contents', 'callback': self.toc },
-            { 'pattern': r"^\|(.*)\|h$", 'callback': self.table_header_columns },
-            { 'pattern': r"^\|(.*)\|$", 'callback': self.table_columns },
+            { 'pattern': r'^(\*+)(.*)', 'callback': self.heading, 'block': True },
+            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
+            { 'pattern': r'^#contents', 'callback': self.toc, 'block': True },
+            { 'pattern': r"^\|(.*)\|h$", 'callback': self.table_header_columns, 'block': True },
+            { 'pattern': r"^\|(.*)\|$", 'callback': self.table_columns, 'block': True },
+            { 'pattern': r"^ (.+)$",    'callback': self.formatted_text, 'block': True },
 
             ##############
             # text effects
             ##############
-            { 'pattern': r"'''(.*)'''(.*)", 'callback': self.italic },
-            { 'pattern': r"''(.*)''(.*)", 'callback':  self.strong },
-            { 'pattern': r"%%(.*)%%(.*)", 'callback':  self.strike_through },
+            { 'pattern': r"'''(.*)'''(.*)",   'callback': self.italic },
+            { 'pattern': r"''(.*)''(.*)",     'callback':  self.strong },
+            { 'pattern': r"%%(.*)%%(.*)",     'callback':  self.strike_through },
             { 'pattern': r"\[\[(.*)\]\](.*)", 'callback': self.link },
 
             # no underline
             
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
+        self.formatted_text_buffer = ''
 
     def normal_text(self, text):
+        self.flush_buffers()
         self.handler.at_normal_text(text)
         return ''
 
@@ -106,6 +109,12 @@ class PukiwikiParser(BaseParser):
         self.handler.at_table_columns(line.split('|'))
         return ''
 
+    def formatted_text(self, groups):
+        text = groups[0]
+        self.log.debug("text = `%s`" % (text))
+        self.formatted_text_buffer += text + '\n'
+        return ''
+
     def table_header_columns(self, groups):
         line = groups[0]
         self.log.debug("line = `%s`" % (line))
@@ -134,19 +143,28 @@ class PukiwikiParser(BaseParser):
         self.handler.at_link(text, url)
         return groups[1]
 
+    def flush_buffers(self):
+        if self.formatted_text_buffer:
+            self.handler.at_formatted_lines(self.formatted_text_buffer)
+            # 整形済みテキストが終わったのでバッファクリア
+            self.formatted_text_buffer = ''
+
     def parse_text(self, text, handler):
         self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
+        self.flush_buffers()
 
     def parse_line(self, line, handler):
         # textにパースする文字列を入れる。これが空になるまでループする
         text = line
+        matched_count = 0
+
         while len(text) != 0:
             matched = None
 
             for pattern in self.patterns:
-                pattern, regexp, callback = pattern['pattern'], pattern['regexp'], pattern['callback']
+                pattern, regexp, callback, block = pattern['pattern'], pattern['regexp'], pattern['callback'], pattern.get('block')
                 if regexp is None:
                     self.log.error("regexp is None for `%s`" % pattern)
                     continue
@@ -154,17 +172,25 @@ class PukiwikiParser(BaseParser):
                     self.log.error("callback is None for `%s`" % pattern)
                     continue
 
+                if matched_count > 0 and block == True:
+                    continue
+
+                # 2回目以降はblock以外のパターンのみパターンマッチさせる
                 matched = regexp.match(text)
+                self.log.debug("pattern = `%s`, text = `%s`, matched = `%s`, %d times" % (pattern, text, matched, matched_count))
                 if matched:
                     self.log.debug("`%s` matched for `%s`" % (pattern, text))
-                    groups = matched.groups()
-                    text = callback(groups)
+                    # 正規表現にマッチしたら登録されているコールバックを呼ぶ
+                    text = callback(matched.groups())
+                    matched_count += 1
                     break
 
             if matched is None:
                 self.log.debug("normal text = `%s`" % (text))
                 text = self.normal_text(text)
 
+# `'''hogehoge''' テキスト`
+# ` テキスト`
 
 
 type2parser = {
