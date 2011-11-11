@@ -121,5 +121,8 @@ class ConfluecenConverter(DefaultHandler):
         pass
 
     def at_link(self, text, url):
-        self.append_text('[%s|%s]' % (text, url))
+        if url:
+            self.append_text('[%s|%s]' % (text, url))
+        else:
+            self.append_text('[%s]' % (text))
 
