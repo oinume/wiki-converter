@@ -191,14 +191,3 @@ class PukiwikiParser(BaseParser):
 
 # `'''hogehoge''' テキスト`
 # ` テキスト`
-
-
-type2parser = {
-    'pukiwiki': PukiwikiParser,
-}
-
-def create_parser(wiki_type, log=None):
-    ParserClass = type2parser[wiki_type]
-    if ParserClass is None:
-        raise ValueError("Unknown wiki_type:" + wiki_type)
-    return ParserClass(log)
