@@ -64,10 +64,10 @@ class ConfluecenConverter(DefaultHandler):
             heading = "h5."
         elif level == 5:
             heading = "h6."
-        self.append_text_with_line(heading + text)
+        self.append_text(heading + text)
 
     def at_toc(self):
-        self.append_text_with_line('{toc}')
+        self.append_text('{toc}')
 
     def at_list(self, text, types):
         self.log.debug("text = `%s`, types = `%s`", text, str(types))
@@ -78,21 +78,21 @@ class ConfluecenConverter(DefaultHandler):
                 self.append_text('#')
             
             if i == len(types) - 1:
-                self.append_text_with_line(text)
+                self.append_text(text)
 
     def at_table_columns(self, columns):
         self.log.debug("columns = %s" % (str(columns)))
-        self.append_text_with_line('|' + '|'.join(columns) + '|')
+        self.append_text('|' + '|'.join(columns) + '|')
 
     def at_table_header_columns(self, columns):
         self.log.debug("columns = %s" % (str(columns)))
-        self.append_text_with_line('||' + '||'.join(columns) + '||')
+        self.append_text('||' + '||'.join(columns) + '||')
 
     def at_formatted_lines(self, lines):
         self.log.debug("lines = `%s`" % (lines))
-        self.append_text_with_line('{code}')
+        self.append_text('{code}')
         self.append_text(lines)
-        self.append_text_with_line('{code}')
+        self.append_text('{code}')
 
     def at_strong(self, text):
         self.append_text('*' + text + '*')
@@ -126,3 +126,5 @@ class ConfluecenConverter(DefaultHandler):
         else:
             self.append_text('[%s]' % (text))
 
+    def at_new_line(self):
+        self.append_text_with_line('')

@@ -7,6 +7,12 @@ parser.parse(file, converter)
 text = converter.converted_text()
 """
 
+# TODO
+# lsx -> sorted-children or pagetree2
+# - の中にある[[link]]のパースができてない
+# *の[#hash]は消していい
+
+
 # blocks
 #  heading
 #  list
@@ -153,6 +159,7 @@ class PukiwikiParser(BaseParser):
         self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
+            self.handler.at_new_line()
         self.flush_buffers()
 
     def parse_line(self, line, handler):
