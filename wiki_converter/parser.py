@@ -118,16 +118,9 @@ class PukiwikiParser(BaseParser):
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
         self.formatted_text_buffer = ''
-        self.tmp_buffer_enabled = False
-        self.tmp_buffer = ''
 
     def append(self, text):
-        if self.tmp_buffer_enabled:
-            self.log.debug("tmp_buffer_enabled")
-            self.tmp_buffer += text
-        else:
-            self.log.debug("tmp_buffer_disabled")
-            self.buffer.append(text)
+        self.buffer.append(text)
 
     def normal_text(self, text):
         self.flush_buffers()
@@ -135,24 +128,19 @@ class PukiwikiParser(BaseParser):
             return ''
         # 1文字分切りだす
         s = self.handler.at_normal_text(text[0:1])
-        self.log.debug("in normal_text(): s = `%s`" % (s))
-        self.append(s)
         if len(text) == 1:
-            return ''
+            return s, ''
         else:
             # 残りの文字列を次に処理させる
-            return text[1:]
+            return s, text[1:]
 
     def heading(self, groups):
         s = self.handler.at_heading(groups[1], len(groups[0]))
-        self.append(s)
-        self.log.debug("s = `%s`" % s)
-        return ''
+        return s, ''
 
     def toc(self, groups):
         s = self.handler.at_toc()
-        self.append(s)
-        return ''
+        return s, ''
 
     def list(self, groups):
         types = []
@@ -165,42 +153,33 @@ class PukiwikiParser(BaseParser):
                 raise ParseError("Invalid list character: '%s'" % char)
 
         s = self.handler.at_list(types)
-        self.append(s)
-        return groups[1]
+        return s, groups[1]
 
     def table_header_columns(self, groups):
         line = groups[0]
         self.log.debug("line = `%s`" % (line))
 
-        self.tmp_buffer_enabled = True
         columns = []
         for text in line.split('|'):
             text = text.strip()
             if text:
-                self.tmp_buffer = ''
-                columns.append(self.parse_line(text, self.handler))
-        self.tmp_buffer_enabled = False
+                columns.append(self.parse_line(text, self.handler, False))
 
         s = self.handler.at_table_header_columns(columns)
-        self.append(s)
-        return ''
+        return s, ''
 
     def table_columns(self, groups):
         line = groups[0]
         self.log.debug("line = `%s`" % (line))
 
-        self.tmp_buffer_enabled = True
         columns = []
         for text in line.split('|'):
             text = text.strip()
             if text:
-                self.tmp_buffer = ''
-                columns.append(self.parse_line(text, self.handler))
-        self.tmp_buffer_enabled = False
+                columns.append(self.parse_line(text, self.handler, False))
 
         s = self.handler.at_table_columns(columns)
-        self.append(s)
-        return ''
+        return s, ''
 
     def formatted_text(self, groups):
         text = groups[0]
@@ -210,18 +189,15 @@ class PukiwikiParser(BaseParser):
 
     def italic(self, groups):
         s = self.handler.at_italic(groups[0])
-        self.append(s)
-        return groups[1]
+        return s, groups[1]
 
     def strong(self, groups):
         s = self.handler.at_strong(groups[0])
-        self.append(s)
-        return groups[1]
+        return s, groups[1]
 
     def strike_through(self, groups):
         s = self.handler.at_strike_through(groups[0])
-        self.append(s)
-        return groups[1]
+        return s, groups[1]
 
     def link(self, groups):
         self.log.debug("link = `%s`" % (groups[0]))
@@ -231,8 +207,7 @@ class PukiwikiParser(BaseParser):
         url = ''.join(array[1:])
         self.log.debug("text = `%s`, url = `%s`" % (text, url))
         s = self.handler.at_link(text, url)
-        self.append(s)
-        return groups[1]
+        return s, groups[1]
 
     def flush_buffers(self):
         if self.formatted_text_buffer:
@@ -243,11 +218,11 @@ class PukiwikiParser(BaseParser):
     def parse_text(self, text, handler):
         self.handler = handler
         for line in text.split('\n'):
-            self.parse_line(line.rstrip(), handler)
+            self.parse_line(line.rstrip(), handler, True)
             self.append(self.handler.at_new_line())
         self.flush_buffers()
 
-    def parse_line(self, line, handler):
+    def parse_line(self, line, handler, append_enabled=True):
         # textにパースする文字列を入れる。これが空になるまでループする
         text = line
         matched_count = 0
@@ -274,17 +249,21 @@ class PukiwikiParser(BaseParser):
                 if matched:
                     self.log.debug("`%s` matched for `%s`" % (pattern, text))
                     # 正規表現にマッチしたら登録されているコールバックを呼ぶ
-                    text = callback(matched.groups())
-                    result = self.tmp_buffer
-                    self.log.debug("result = `%s`, self.tmp_buffer = `%s`" % (result, self.tmp_buffer))
+                    converted, text = callback(matched.groups())
+                    if append_enabled:
+                        self.append(converted)
+                    result += converted
+                    self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
                     matched_count += 1
                     break
 
             if matched is None:
                 self.log.debug("normal text = `%s`" % (text))
-                text = self.normal_text(text)
-                result = self.tmp_buffer
-                self.log.debug("result = `%s`, self.tmp_buffer = `%s`" % (result, self.tmp_buffer))
+                converted, text = self.normal_text(text)
+                if append_enabled:
+                    self.append(converted)
+                result += converted
+                self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
 
         return result
 # `'''hogehoge''' テキスト`
