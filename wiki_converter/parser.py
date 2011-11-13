@@ -107,10 +107,10 @@ class PukiwikiParser(BaseParser):
             # text effects
             ##############
             { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
-            { 'pattern': r"'''(.*)'''(.*)",   'callback': self.italic },
-            { 'pattern': r"''(.*)''(.*)",     'callback':  self.strong },
-            { 'pattern': r"%%(.*)%%(.*)",     'callback':  self.strike_through },
-            { 'pattern': r"\[\[(.*)\]\](.*)", 'callback': self.link },
+            { 'pattern': r"'''(.*?)'''(.*)",   'callback': self.italic },
+            { 'pattern': r"''(.*?)''(.*)",     'callback':  self.strong },
+            { 'pattern': r"%%(.*?)%%(.*)",     'callback':  self.strike_through },
+            { 'pattern': r"\[\[(.*?)\]\](.*)", 'callback': self.link },
 
             # no underline
             
