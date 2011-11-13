@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-parser = wiki_converter.parser.create_parser('pukiwiki')
-converter = wiki_converter.parser.ConfluecenConverter()
+parser = wiki_converter.parser.create_parser('pukiwiki', logger)
+converter = wiki_converter.converter.ConfluecenConverter(logger)
 parser.parse(file, converter)
 text = converter.converted_text()
 """
@@ -197,8 +197,8 @@ type2parser = {
     'pukiwiki': PukiwikiParser,
 }
 
-def create_parser(wiki_type):
+def create_parser(wiki_type, log=None):
     ParserClass = type2parser[wiki_type]
     if ParserClass is None:
         raise ValueError("Unknown wiki_type:" + wiki_type)
-    return ParserClass()
+    return ParserClass(log)

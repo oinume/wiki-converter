@@ -8,16 +8,9 @@ from flask import (
     session,
     url_for,
 )
-import urllib
-import urlparse
+import wiki_converter
 
-import config
-
-# parse_qsl moved to urlparse module in v2.6
-try:
-    from urlparse import parse_qsl
-except:
-    from cgi import parse_qsl
+#import config
 
 app = Blueprint('root', __name__)
 
@@ -27,7 +20,22 @@ def index():
 
 @app.route('/process', methods = [ 'POST' ])
 def process():
-    return redirect('/complete')
+    log = current_app.logger
+    v = request.values
+    source = v['source']
+    if not source:
+        return redirect('/')
+
+    parser = wiki_converter.create_parser('pukiwiki', log)
+    converter = wiki_converter.create_converter('confluence', log)
+    parser.parse_text(source, converter)
+    log.debug('=== converted === \n%s' % (converter.converted_text))
+
+    return render_template(
+        'complete.html',
+        converted_text=converter.converted_text
+    )
+    #return redirect('/complete')
 
 @app.route('/complete')
 def complete():
