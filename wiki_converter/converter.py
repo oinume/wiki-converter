@@ -50,17 +50,15 @@ class ConfluecenConverter(DefaultHandler):
 
     def at_table_columns(self, columns):
         self.log.debug("columns = %s" % (str(columns)))
-        self.append_text('|' + '|'.join(columns) + '|')
+        return '|' + '|'.join(columns) + '|'
 
     def at_table_header_columns(self, columns):
         self.log.debug("columns = %s" % (str(columns)))
-        self.append_text('||' + '||'.join(columns) + '||')
+        return '||' + '||'.join(columns) + '||'
 
     def at_formatted_lines(self, lines):
         self.log.debug("lines = `%s`" % (lines))
-        self.append_text('{code}')
-        self.append_text(lines)
-        self.append_text('{code}')
+        return '{code}' + lines + '{code}'
 
     def at_strong(self, text):
         return '*' + text + '*'

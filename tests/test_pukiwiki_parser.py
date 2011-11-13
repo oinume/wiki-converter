@@ -23,38 +23,35 @@ class TestPukiwikiParser(unittest.TestCase):
         self.p.parse_text(u"#contents", self.c)
         eq_(u"{toc}", self.p.buffer.value.rstrip(), "toc")
 
-#    def testTableColumns(self):
-#        self.converter.reset_converted_text()
-#        self.parser.parse_text(u"| ほげ | ふが |", self.converter)
-#        eq_(
-#            u"| ほげ | ふが |\n",
-#            self.converter.converted_text,
-#            'table_columns'
-#        )
-#
-#    def testHeaderTableColumns(self):
-#        self.converter.reset_converted_text()
-#        self.parser.parse_text(u"| これは | ヘッダー |h", self.converter)
-#        eq_(
-#            u"|| これは || ヘッダー ||\n",
-#            self.converter.converted_text,
-#            'table_header_columns'
-#        )
-#
-#    def testTable(self):
-#        self.converter.reset_converted_text()
-#        self.parser.parse_text("""\
-#| num | text |h
-#| 1 | one |
-#""".rstrip(), self.converter)
-#
-#        eq_("""\
-#|| num || text ||
-#| 1 | one |
-#""".rstrip(),
-#            self.converter.converted_text.rstrip(),
-#            'table_header_columns'
-#        )
+    def testTableColumns(self):
+        self.p.parse_text(u"| Hoge | Fuga |", self.c)
+        eq_(u"|Hoge|Fuga|", self.p.buffer.value.rstrip(), "table_columns")
+
+        self.p.buffer.reset()
+        self.p.parse_text(u"|ほげ|ふが|", self.c)
+        eq_(u"|ほげ|ふが|", self.p.buffer.value.rstrip(), "table_columns")
+
+    def testTableColumnsComplex(self):
+        self.p.parse_text(u"| Col | [[Page]] |", self.c)
+        eq_(u"|Col|[Page]|", self.p.buffer.value.rstrip(), "table_columns complex")
+
+    def testHeaderTableColumns(self):
+        self.p.parse_text(u"| Header1 | Header2 |h", self.c)
+        eq_(u"||Header1||Header2||", self.p.buffer.value.rstrip(), "table_header_columns")
+
+    def testTable(self):
+        self.p.parse_text("""\
+| num | text |h
+| 1 | one |
+""".rstrip(), self.c)
+
+        eq_("""\
+||num||text||
+|1|one|
+""".rstrip(),
+            self.p.buffer.value.rstrip(),
+            "table",
+        )
 #
 #    def testFormattedText(self):
 #        self.converter.reset_converted_text()
