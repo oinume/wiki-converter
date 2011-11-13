@@ -12,7 +12,9 @@ text = parser.converted_text
 # TODO
 # lsx -> sorted-children or pagetree2
 # *の[#hash]は消していい
-
+# -[Page]ほげ
+# みたいなのを処理するとき、リストに入ったら__inline_onlyのフラグを立てて、インラインのパターンのみ実行する
+# 行の最後まで来たら __inline_only のフラグを外す
 
 # blocks
 #  heading
