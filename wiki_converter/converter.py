@@ -38,16 +38,15 @@ class ConfluecenConverter(DefaultHandler):
     def at_toc(self):
         return u'{toc}'
 
-    def at_list(self, text, types):
-        self.log.debug("text = `%s`, types = `%s`", text, str(types))
+    def at_list(self, types):
+        self.log.debug("types = `%s`", str(types))
+        s = ''
         for i, type in enumerate(types):
             if type == LIST_TYPE_BULLET:
-                self.append_text('*')
+                s += '*'
             elif type == LIST_TYPE_NUMBERED:
-                self.append_text('#')
-            
-            if i == len(types) - 1:
-                self.append_text(text)
+                s += '#'
+        return s
 
     def at_table_columns(self, columns):
         self.log.debug("columns = %s" % (str(columns)))

@@ -83,35 +83,42 @@ class TestPukiwikiParser(unittest.TestCase):
         self.p.parse_text(u"''Strong text.'' Normal text.", self.c)
         eq_(u"*Strong text.* Normal text.", self.p.buffer.value.rstrip(), "strong")
 
-    def testLink(self):
+    def testLinkWithAlias(self):
         self.p.parse_text(u"[[リンクテスト|http://www.ameba.jp]]", self.c)
         self.log.debug("value : `%s`" % self.p.buffer.value)
-        eq_(u"[リンクテスト|http//www.ameba.jp]", self.p.buffer.value.rstrip(), "link(with alias)")
+        eq_(u"[リンクテスト|http//www.ameba.jp]", self.p.buffer.value.rstrip(), "link with alias")
 
-        self.p.buffer.reset()
+    def testLinkWithoutAlias(self):
         self.p.parse_text(u"[[LinkPage]]", self.c)
         self.log.debug("value : `%s`" % self.p.buffer.value)
-        eq_(u"[LinkPage]", self.p.buffer.value.rstrip(), "link(without alias)")
+        eq_(u"[LinkPage]", self.p.buffer.value.rstrip(), "link without alias")
 
-#    def testList(self):
-#        self.converter.reset_converted_text()
-#        self.parser.parse_text(u"""\
-#- bullet1
-#-- bullet2
-#-+ bullet + number1
-#-+ bullet + number2
-#+ number1
-#""", self.converter)
-#
-#        self.log.debug("converted : {%s}" % self.converter.converted_text)
-#        eq_(u"""\
-#* bullet1
-#** bullet2
-#*# bullet + number1
-#*# bullet + number2
-## number1
-#""".rstrip(),
-#            self.converter.converted_text.rstrip(),
-#            'list'
-#        )
+    def testLinkComplex(self):
+        self.p.parse_text(u"[[Page1]] [[Page2]]", self.c)
+        self.log.debug("value : `%s`" % self.p.buffer.value)
+        eq_(u"[Page1] [Page2]", self.p.buffer.value.rstrip(), "link complex")
 
+    def testListSimple(self):
+        self.p.parse_text(u"""\
+- bullet1
+-- bullet2
+-+ bullet + number1
+-+ bullet + number2
++ number1
+""", self.c)
+
+        self.log.debug("value: {%s}" % self.p.buffer.value)
+        eq_(u"""\
+* bullet1
+** bullet2
+*# bullet + number1
+*# bullet + number2
+# number1
+""".rstrip(),
+            self.p.buffer.value.rstrip(),
+            "list"
+        )
+
+    def testListComplex(self):
+        self.p.parse_text(u"- page:[[page1]]", self.c)
+        eq_(u"* page:[page1]", self.p.buffer.value.rstrip(), "list with a link")

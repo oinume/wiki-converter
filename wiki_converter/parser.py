@@ -98,7 +98,6 @@ class PukiwikiParser(BaseParser):
             # blocks
             ##############
             { 'pattern': r'^(\*+)(.*)', 'callback': self.heading, 'block': True },
-            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
             { 'pattern': r'^#contents', 'callback': self.toc, 'block': True },
             { 'pattern': r"^\|(.*)\|h$", 'callback': self.table_header_columns, 'block': True },
             { 'pattern': r"^\|(.*)\|$", 'callback': self.table_columns, 'block': True },
@@ -107,6 +106,7 @@ class PukiwikiParser(BaseParser):
             ##############
             # text effects
             ##############
+            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
             { 'pattern': r"'''(.*)'''(.*)",   'callback': self.italic },
             { 'pattern': r"''(.*)''(.*)",     'callback':  self.strong },
             { 'pattern': r"%%(.*)%%(.*)",     'callback':  self.strike_through },
@@ -120,9 +120,17 @@ class PukiwikiParser(BaseParser):
 
     def normal_text(self, text):
         self.flush_buffers()
-        s = self.handler.at_normal_text(text)
+        if len(text) == 0:
+            return ''
+        # 1文字分切りだす
+        s = self.handler.at_normal_text(text[0:1])
+        self.log.debug("s = `%s`" % (s))
         self.buffer.append(s)
-        return ''
+        if len(text) == 1:
+            return ''
+        else:
+            # 残りの文字列を次に処理させる
+            return text[1:]
 
     def heading(self, groups):
         s = self.handler.at_heading(groups[1], len(groups[0]))
@@ -145,9 +153,9 @@ class PukiwikiParser(BaseParser):
             else:
                 raise ParseError("Invalid list character: '%s'" % char)
 
-        s = self.handler.at_list(groups[1], types)
+        s = self.handler.at_list(types)
         self.buffer.append(s)
-        return ''
+        return groups[1]
 
     def table_columns(self, groups):
         line = groups[0]
