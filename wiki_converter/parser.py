@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-parser = wiki_converter.parser.create_parser('pukiwiki', logger)
-converter = wiki_converter.converter.ConfluecenConverter(logger)
+from wiki_converter.function import create_parser, create_converter
+parser = create_parser('pukiwki', logger)
+converter = create_converter('confluence', logger)
 parser.parse(file, converter)
-text = converter.converted_text()
+# or parser.parse_text(text, converter)
+text = parser.converted_text
 """
 
 # TODO
@@ -29,10 +31,39 @@ from wiki_converter.common import ParseError
 from wiki_converter.log import create_logger
 from wiki_converter.handler import LIST_TYPE_BULLET, LIST_TYPE_NUMBERED
 
+class ConvertingBuffer(object):
+    def __init__(self):
+        self.__b = u''
+
+    def append(self, text):
+        if text is None:
+            return
+        self.__b += text
+
+    def append_ln(self, text):
+        if text is None:
+            return
+        self.__b += text + u'\n'
+
+    def reset(self):
+        self.__b = u''
+
+    @property
+    def value(self):
+        return self.__b
+
+    def __repr__(self):
+        return self.value()
+
+    def __str__(self):
+        return self.value()
+
 class BaseParser(object):
     def __init__(self, patterns, log):
         self.__log = log
         self.__handler = None
+        self.__buffer = ConvertingBuffer()
+        
         for pattern in patterns:
             pattern['regexp'] = re.compile(pattern['pattern'])
         self.__patterns = patterns
@@ -53,6 +84,10 @@ class BaseParser(object):
     @property
     def patterns(self):
         return self.__patterns
+
+    @property
+    def buffer(self):
+        return self.__buffer
 
     handler = property(get_handler, set_handler)
 
@@ -85,15 +120,19 @@ class PukiwikiParser(BaseParser):
 
     def normal_text(self, text):
         self.flush_buffers()
-        self.handler.at_normal_text(text)
+        s = self.handler.at_normal_text(text)
+        self.buffer.append(s)
         return ''
 
     def heading(self, groups):
-        self.handler.at_heading(groups[1], len(groups[0]))
+        s = self.handler.at_heading(groups[1], len(groups[0]))
+        self.buffer.append(s)
+        self.log.debug("s = `%s`" % s)
         return ''
 
     def toc(self, groups):
-        self.handler.at_toc()
+        s = self.handler.at_toc()
+        self.buffer.append(s)
         return ''
 
     def list(self, groups):
@@ -106,13 +145,15 @@ class PukiwikiParser(BaseParser):
             else:
                 raise ParseError("Invalid list character: '%s'" % char)
 
-        self.handler.at_list(groups[1], types)
+        s = self.handler.at_list(groups[1], types)
+        self.buffer.append(s)
         return ''
 
     def table_columns(self, groups):
         line = groups[0]
         self.log.debug("line = `%s`" % (line))
-        self.handler.at_table_columns(line.split('|'))
+        s = self.handler.at_table_columns(line.split('|'))
+        self.buffer.append(s)
         return ''
 
     def formatted_text(self, groups):
@@ -128,15 +169,18 @@ class PukiwikiParser(BaseParser):
         return ''
 
     def italic(self, groups):
-        self.handler.at_italic(groups[0])
+        s = self.handler.at_italic(groups[0])
+        self.buffer.append(s)
         return groups[1]
 
     def strong(self, groups):
-        self.handler.at_strong(groups[0])
+        s = self.handler.at_strong(groups[0])
+        self.buffer.append(s)
         return groups[1]
 
     def strike_through(self, groups):
-        self.handler.at_strike_through(groups[0])
+        s = self.handler.at_strike_through(groups[0])
+        self.buffer.append(s)
         return groups[1]
 
     def link(self, groups):
@@ -146,7 +190,8 @@ class PukiwikiParser(BaseParser):
         text = array[0]
         url = ''.join(array[1:])
         self.log.debug("text = `%s`, url = `%s`" % (text, url))
-        self.handler.at_link(text, url)
+        s = self.handler.at_link(text, url)
+        self.buffer.append(s)
         return groups[1]
 
     def flush_buffers(self):
@@ -159,7 +204,7 @@ class PukiwikiParser(BaseParser):
         self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
-            self.handler.at_new_line()
+            self.buffer.append(self.handler.at_new_line())
         self.flush_buffers()
 
     def parse_line(self, line, handler):

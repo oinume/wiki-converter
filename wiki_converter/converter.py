@@ -17,40 +17,9 @@ class ConfluecenConverter(DefaultHandler):
     def log(self):
         return self.__log
 
-    def get_converted_text(self):
-        return self.__converted_text
-
-    def set_converted_text(self, text):
-        self.__converted_text = text
-
-    def get_current_converted_text(self):
-        return self.__current_converted_text
-
-    def set_current_converted_text(self, text):
-        self.__current_converted_text = text
-
-    converted_text = property(get_converted_text, set_converted_text)
-    current_converted_text = property(get_current_converted_text, set_current_converted_text)
-
-    def append_text(self, text):
-        self.current_converted_text = text
-        self.converted_text += text
-
-    def append_text_with_line(self, text):
-        self.current_converted_text = text + '\n'
-        self.converted_text += text + '\n'
-
-    def append_line(self):
-        self.current_converted_text += '\n'
-        self.converted_text += '\n'
-
-    def reset_converted_text(self):
-        self.current_converted_text = ''
-        self.converted_text = ''
-    
     def at_normal_text(self, text):
         self.log.debug("at_normal_text = `%s`" % (text))
-        self.append_text(text)
+        return text
     
     def at_heading(self, text, level):
         heading = "h1."
@@ -64,10 +33,10 @@ class ConfluecenConverter(DefaultHandler):
             heading = "h5."
         elif level == 5:
             heading = "h6."
-        self.append_text(heading + text)
+        return heading + text
 
     def at_toc(self):
-        self.append_text('{toc}')
+        return u'{toc}'
 
     def at_list(self, text, types):
         self.log.debug("text = `%s`, types = `%s`", text, str(types))
@@ -95,22 +64,22 @@ class ConfluecenConverter(DefaultHandler):
         self.append_text('{code}')
 
     def at_strong(self, text):
-        self.append_text('*' + text + '*')
+        return '*' + text + '*'
 
     def at_italic(self, text):
-        self.append_text('_' + text + '_')
+        return '_' + text + '_'
 
     def at_strike_through(self, text):
-        self.append_text('-' + text + '-')
+        return '-' + text + '-'
 
     def at_underlines(self, text):
-        self.append_text('+' + text + '+')
+        return '+' + text + '+'
 
     def at_superscript(self, text):
-        self.append_text('^' + text + '^')
+        return '^' + text + '^'
 
     def at_subscript(self, text):
-        self.append_text('~' + text + '~')
+        return '~' + text + '~'
 
     def at_monospaced(self, text):
         pass
@@ -122,9 +91,9 @@ class ConfluecenConverter(DefaultHandler):
 
     def at_link(self, text, url):
         if url:
-            self.append_text('[%s|%s]' % (text, url))
+            return '[%s|%s]' % (text, url)
         else:
-            self.append_text('[%s]' % (text))
+            return '[%s]' % (text)
 
     def at_new_line(self):
-        self.append_text_with_line('')
+        return '\n'
