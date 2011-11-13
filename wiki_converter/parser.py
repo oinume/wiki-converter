@@ -11,7 +11,6 @@ text = parser.converted_text
 
 # TODO
 # lsx -> sorted-children or pagetree2
-# - の中にある[[link]]のパースができてない
 # *の[#hash]は消していい
 
 
@@ -104,11 +103,11 @@ class PukiwikiParser(BaseParser):
             { 'pattern': r"^\|(.*)\|h$", 'callback': self.table_header_columns, 'block': True },
             { 'pattern': r"^\|(.*)\|$", 'callback': self.table_columns, 'block': True },
             { 'pattern': r"^ (.+)$",    'callback': self.formatted_text, 'block': True },
+            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
 
             ##############
             # text effects
             ##############
-            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
             { 'pattern': r"'''(.*?)'''(.*)",   'callback': self.italic },
             { 'pattern': r"''(.*?)''(.*)",     'callback':  self.strong },
             { 'pattern': r"%%(.*?)%%(.*)",     'callback':  self.strike_through },

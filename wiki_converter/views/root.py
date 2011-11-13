@@ -9,6 +9,7 @@ from flask import (
     url_for,
 )
 import wiki_converter
+import wiki_converter.function
 
 #import config
 
@@ -26,14 +27,14 @@ def process():
     if not source:
         return redirect('/')
 
-    parser = wiki_converter.create_parser('pukiwiki', log)
-    converter = wiki_converter.create_converter('confluence', log)
+    parser = wiki_converter.function.create_parser('pukiwiki', log)
+    converter = wiki_converter.function.create_converter('confluence', log)
     parser.parse_text(source, converter)
-    log.debug('=== converted === \n%s' % (converter.converted_text))
+    log.debug('=== converted === \n%s' % (parser.buffer.value))
 
     return render_template(
         'complete.html',
-        converted_text=converter.converted_text
+        converted_text=parser.buffer.value
     )
     #return redirect('/complete')
 
