@@ -63,6 +63,7 @@ class BaseParser(object):
         self.__log = log
         self.__handler = None
         self.__buffer = ConvertingBuffer()
+        self.__append_enabled = True
 
         for pattern in patterns:
             pattern['regexp'] = re.compile(pattern['pattern'])
@@ -117,6 +118,7 @@ class PukiwikiParser(BaseParser):
             
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
+        self.__append_enabled = True
         self.formatted_text_buffer = ''
 
     def append(self, text):
@@ -160,10 +162,12 @@ class PukiwikiParser(BaseParser):
         self.log.debug("line = `%s`" % (line))
 
         columns = []
+        self.__append_enabled = False
         for text in line.split('|'):
             text = text.strip()
             if text:
-                columns.append(self.parse_line(text, self.handler, False))
+                columns.append(self.parse_line(text, self.handler))
+        self.__append_enabled = True
 
         s = self.handler.at_table_header_columns(columns)
         return s, ''
@@ -173,19 +177,22 @@ class PukiwikiParser(BaseParser):
         self.log.debug("line = `%s`" % (line))
 
         columns = []
+        self.__append_enabled = False
         for text in line.split('|'):
             text = text.strip()
             if text:
-                columns.append(self.parse_line(text, self.handler, False))
-
+                self.__append_enabled = False
+                columns.append(self.parse_line(text, self.handler))
+        self.__append_enabled = True
         s = self.handler.at_table_columns(columns)
         return s, ''
 
     def formatted_text(self, groups):
         text = groups[0]
-        self.log.debug("text = `%s`" % (text))
+        self.log.debug("formatted_text = `%s`" % (text))
         self.formatted_text_buffer += text + '\n'
-        return ''
+        self.__append_enabled = False
+        return '', ''
 
     def italic(self, groups):
         s = self.handler.at_italic(groups[0])
@@ -211,18 +218,21 @@ class PukiwikiParser(BaseParser):
 
     def flush_buffers(self):
         if self.formatted_text_buffer:
-            self.handler.at_formatted_lines(self.formatted_text_buffer)
+            s = self.handler.at_formatted_lines(self.formatted_text_buffer)
+            self.append(s)
             # 整形済みテキストが終わったのでバッファクリア
             self.formatted_text_buffer = ''
+            self.__append_enabled = True
 
     def parse_text(self, text, handler):
         self.handler = handler
         for line in text.split('\n'):
-            self.parse_line(line.rstrip(), handler, True)
-            self.append(self.handler.at_new_line())
+            self.parse_line(line.rstrip(), handler)
+            if self.__append_enabled:
+                self.append(self.handler.at_new_line())
         self.flush_buffers()
 
-    def parse_line(self, line, handler, append_enabled=True):
+    def parse_line(self, line, handler):
         # textにパースする文字列を入れる。これが空になるまでループする
         text = line
         matched_count = 0
@@ -250,7 +260,7 @@ class PukiwikiParser(BaseParser):
                     self.log.debug("`%s` matched for `%s`" % (pattern, text))
                     # 正規表現にマッチしたら登録されているコールバックを呼ぶ
                     converted, text = callback(matched.groups())
-                    if append_enabled:
+                    if self.__append_enabled:
                         self.append(converted)
                     result += converted
                     self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
@@ -260,7 +270,7 @@ class PukiwikiParser(BaseParser):
             if matched is None:
                 self.log.debug("normal text = `%s`" % (text))
                 converted, text = self.normal_text(text)
-                if append_enabled:
+                if self.__append_enabled:
                     self.append(converted)
                 result += converted
                 self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))

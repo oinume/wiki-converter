@@ -52,26 +52,25 @@ class TestPukiwikiParser(unittest.TestCase):
             self.p.buffer.value.rstrip(),
             "table",
         )
-#
-#    def testFormattedText(self):
-#        self.converter.reset_converted_text()
-#        self.parser.parse_text(u"""\
-# This is a
-# formatted
-# text.
-#""".rstrip(), self.converter)
-#        print self.converter.converted_text
-#        eq_("""\
-#{code}
-#This is a
-#formatted
-#text.
-#{code}
-#""".rstrip(),
-#            self.converter.converted_text.rstrip(),
-#            'formatted_text'
-#        )
-#
+
+    def testFormattedText(self):
+        self.p.parse_text(u"""\
+ This is a
+ formatted
+ text.
+""".rstrip(), self.c)
+
+        eq_("""\
+{code}
+This is a
+formatted
+text.
+{code}
+""".rstrip(),
+            self.p.buffer.value.rstrip(),
+            "formatted_text",
+        )
+
     def testItalic(self):
         self.p.parse_text(u"'''Italic text.''' Normal text.", self.c)
         eq_(u"_Italic text._ Normal text.", self.p.buffer.value.rstrip(), "italic")

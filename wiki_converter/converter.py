@@ -58,7 +58,7 @@ class ConfluecenConverter(DefaultHandler):
 
     def at_formatted_lines(self, lines):
         self.log.debug("lines = `%s`" % (lines))
-        return '{code}' + lines + '{code}'
+        return '{code}\n' + lines + '{code}'
 
     def at_strong(self, text):
         return '*' + text + '*'
