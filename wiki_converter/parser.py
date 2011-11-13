@@ -63,7 +63,7 @@ class BaseParser(object):
         self.__log = log
         self.__handler = None
         self.__buffer = ConvertingBuffer()
-        
+
         for pattern in patterns:
             pattern['regexp'] = re.compile(pattern['pattern'])
         self.__patterns = patterns
@@ -92,6 +92,7 @@ class BaseParser(object):
     handler = property(get_handler, set_handler)
 
 class PukiwikiParser(BaseParser):
+
     def __init__(self, log=create_logger()):
         patterns = [
             ##############
@@ -117,6 +118,16 @@ class PukiwikiParser(BaseParser):
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
         self.formatted_text_buffer = ''
+        self.tmp_buffer_enabled = False
+        self.tmp_buffer = ''
+
+    def append(self, text):
+        if self.tmp_buffer_enabled:
+            self.log.debug("tmp_buffer_enabled")
+            self.tmp_buffer += text
+        else:
+            self.log.debug("tmp_buffer_disabled")
+            self.buffer.append(text)
 
     def normal_text(self, text):
         self.flush_buffers()
@@ -124,8 +135,8 @@ class PukiwikiParser(BaseParser):
             return ''
         # 1文字分切りだす
         s = self.handler.at_normal_text(text[0:1])
-        self.log.debug("s = `%s`" % (s))
-        self.buffer.append(s)
+        self.log.debug("in normal_text(): s = `%s`" % (s))
+        self.append(s)
         if len(text) == 1:
             return ''
         else:
@@ -134,13 +145,13 @@ class PukiwikiParser(BaseParser):
 
     def heading(self, groups):
         s = self.handler.at_heading(groups[1], len(groups[0]))
-        self.buffer.append(s)
+        self.append(s)
         self.log.debug("s = `%s`" % s)
         return ''
 
     def toc(self, groups):
         s = self.handler.at_toc()
-        self.buffer.append(s)
+        self.append(s)
         return ''
 
     def list(self, groups):
@@ -154,14 +165,41 @@ class PukiwikiParser(BaseParser):
                 raise ParseError("Invalid list character: '%s'" % char)
 
         s = self.handler.at_list(types)
-        self.buffer.append(s)
+        self.append(s)
         return groups[1]
+
+    def table_header_columns(self, groups):
+        line = groups[0]
+        self.log.debug("line = `%s`" % (line))
+
+        self.tmp_buffer_enabled = True
+        columns = []
+        for text in line.split('|'):
+            text = text.strip()
+            if text:
+                self.tmp_buffer = ''
+                columns.append(self.parse_line(text, self.handler))
+        self.tmp_buffer_enabled = False
+
+        s = self.handler.at_table_header_columns(columns)
+        self.append(s)
+        return ''
 
     def table_columns(self, groups):
         line = groups[0]
         self.log.debug("line = `%s`" % (line))
-        s = self.handler.at_table_columns(line.split('|'))
-        self.buffer.append(s)
+
+        self.tmp_buffer_enabled = True
+        columns = []
+        for text in line.split('|'):
+            text = text.strip()
+            if text:
+                self.tmp_buffer = ''
+                columns.append(self.parse_line(text, self.handler))
+        self.tmp_buffer_enabled = False
+
+        s = self.handler.at_table_columns(columns)
+        self.append(s)
         return ''
 
     def formatted_text(self, groups):
@@ -170,25 +208,19 @@ class PukiwikiParser(BaseParser):
         self.formatted_text_buffer += text + '\n'
         return ''
 
-    def table_header_columns(self, groups):
-        line = groups[0]
-        self.log.debug("line = `%s`" % (line))
-        self.handler.at_table_header_columns(line.split('|'))
-        return ''
-
     def italic(self, groups):
         s = self.handler.at_italic(groups[0])
-        self.buffer.append(s)
+        self.append(s)
         return groups[1]
 
     def strong(self, groups):
         s = self.handler.at_strong(groups[0])
-        self.buffer.append(s)
+        self.append(s)
         return groups[1]
 
     def strike_through(self, groups):
         s = self.handler.at_strike_through(groups[0])
-        self.buffer.append(s)
+        self.append(s)
         return groups[1]
 
     def link(self, groups):
@@ -199,7 +231,7 @@ class PukiwikiParser(BaseParser):
         url = ''.join(array[1:])
         self.log.debug("text = `%s`, url = `%s`" % (text, url))
         s = self.handler.at_link(text, url)
-        self.buffer.append(s)
+        self.append(s)
         return groups[1]
 
     def flush_buffers(self):
@@ -212,13 +244,14 @@ class PukiwikiParser(BaseParser):
         self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
-            self.buffer.append(self.handler.at_new_line())
+            self.append(self.handler.at_new_line())
         self.flush_buffers()
 
     def parse_line(self, line, handler):
         # textにパースする文字列を入れる。これが空になるまでループする
         text = line
         matched_count = 0
+        result = ''
 
         while len(text) != 0:
             matched = None
@@ -233,21 +266,26 @@ class PukiwikiParser(BaseParser):
                     continue
 
                 if matched_count > 0 and block == True:
+                    # 2回目以降はblock以外のパターンのみパターンマッチさせる
                     continue
 
-                # 2回目以降はblock以外のパターンのみパターンマッチさせる
                 matched = regexp.match(text)
                 self.log.debug("pattern = `%s`, text = `%s`, matched = `%s`, %d times" % (pattern, text, matched, matched_count))
                 if matched:
                     self.log.debug("`%s` matched for `%s`" % (pattern, text))
                     # 正規表現にマッチしたら登録されているコールバックを呼ぶ
                     text = callback(matched.groups())
+                    result = self.tmp_buffer
+                    self.log.debug("result = `%s`, self.tmp_buffer = `%s`" % (result, self.tmp_buffer))
                     matched_count += 1
                     break
 
             if matched is None:
                 self.log.debug("normal text = `%s`" % (text))
                 text = self.normal_text(text)
+                result = self.tmp_buffer
+                self.log.debug("result = `%s`, self.tmp_buffer = `%s`" % (result, self.tmp_buffer))
 
+        return result
 # `'''hogehoge''' テキスト`
 # ` テキスト`
