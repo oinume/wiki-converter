@@ -10,4 +10,4 @@ set_sys_path(__file__)
 from wiki_converter import app
 
 if __name__ == '__main__':
-    app.run(debug = app.config['DEBUG'])
+    app.run(host='0.0.0.0', debug=app.config['DEBUG'])
