@@ -23,54 +23,54 @@ class TestPukiwikiParser(unittest.TestCase):
         self.p.parse_text(u"#contents", self.c)
         eq_(u"{toc}", self.p.buffer.value.rstrip(), "toc")
 
-    def testTableColumns(self):
-        self.p.parse_text(u"| Hoge | Fuga |", self.c)
-        eq_(u"|Hoge|Fuga|", self.p.buffer.value.rstrip(), "table_columns")
-
-        self.p.buffer.reset()
-        self.p.parse_text(u"|ほげ|ふが|", self.c)
-        eq_(u"|ほげ|ふが|", self.p.buffer.value.rstrip(), "table_columns")
-
-    def testTableColumnsComplex(self):
-        self.p.parse_text(u"| Col | [[Page]] |", self.c)
-        eq_(u"|Col|[Page]|", self.p.buffer.value.rstrip(), "table_columns complex")
-
-    def testHeaderTableColumns(self):
-        self.p.parse_text(u"| Header1 | Header2 |h", self.c)
-        eq_(u"||Header1||Header2||", self.p.buffer.value.rstrip(), "table_header_columns")
-
-    def testTable(self):
-        self.p.parse_text("""\
-| num | text |h
-| 1 | one |
-""".rstrip(), self.c)
-
-        eq_("""\
-||num||text||
-|1|one|
-""".rstrip(),
-            self.p.buffer.value.rstrip(),
-            "table",
-        )
-
-    def testFormattedText(self):
-        self.p.parse_text(u"""\
- This is a
- formatted
- text.
-""".rstrip(), self.c)
-
-        eq_("""\
-{code}
-This is a
-formatted
-text.
-{code}
-""".rstrip(),
-            self.p.buffer.value.rstrip(),
-            "formatted_text",
-        )
-
+#    def testTableColumns(self):
+#        self.p.parse_text(u"| Hoge | Fuga |", self.c)
+#        eq_(u"|Hoge|Fuga|", self.p.buffer.value.rstrip(), "table_columns")
+#
+#        self.p.buffer.reset()
+#        self.p.parse_text(u"|ほげ|ふが|", self.c)
+#        eq_(u"|ほげ|ふが|", self.p.buffer.value.rstrip(), "table_columns")
+#
+#    def testTableColumnsComplex(self):
+#        self.p.parse_text(u"| Col | [[Page]] |", self.c)
+#        eq_(u"|Col|[Page]|", self.p.buffer.value.rstrip(), "table_columns complex")
+#
+#    def testHeaderTableColumns(self):
+#        self.p.parse_text(u"| Header1 | Header2 |h", self.c)
+#        eq_(u"||Header1||Header2||", self.p.buffer.value.rstrip(), "table_header_columns")
+#
+#    def testTable(self):
+#        self.p.parse_text("""\
+#| num | text |h
+#| 1 | one |
+#""".rstrip(), self.c)
+#
+#        eq_("""\
+#||num||text||
+#|1|one|
+#""".rstrip(),
+#            self.p.buffer.value.rstrip(),
+#            "table",
+#        )
+#
+#    def testFormattedText(self):
+#        self.p.parse_text(u"""\
+# This is a
+# formatted
+# text.
+#""".rstrip(), self.c)
+#
+#        eq_("""\
+#{code}
+#This is a
+#formatted
+#text.
+#{code}
+#""".rstrip(),
+#            self.p.buffer.value.rstrip(),
+#            "formatted_text",
+#        )
+#
     def testItalic(self):
         self.p.parse_text(u"'''Italic text.''' Normal text.", self.c)
         eq_(u"_Italic text._ Normal text.", self.p.buffer.value.rstrip(), "italic")
@@ -84,16 +84,16 @@ text.
         self.log.debug("value : `%s`" % self.p.buffer.value)
         eq_(u"[リンクテスト|http//www.ameba.jp]", self.p.buffer.value.rstrip(), "link with alias")
 
-    def testLinkWithoutAlias(self):
-        self.p.parse_text(u"[[LinkPage]]", self.c)
-        self.log.debug("value : `%s`" % self.p.buffer.value)
-        eq_(u"[LinkPage]", self.p.buffer.value.rstrip(), "link without alias")
-
-    def testLinkComplex(self):
-        self.p.parse_text(u"[[Page1]] [[Page2]]", self.c)
-        self.log.debug("value : `%s`" % self.p.buffer.value)
-        eq_(u"[Page1] [Page2]", self.p.buffer.value.rstrip(), "link complex")
-
+#    def testLinkWithoutAlias(self):
+#        self.p.parse_text(u"[[LinkPage]]", self.c)
+#        self.log.debug("value : `%s`" % self.p.buffer.value)
+#        eq_(u"[LinkPage]", self.p.buffer.value.rstrip(), "link without alias")
+#
+#    def testLinkComplex(self):
+#        self.p.parse_text(u"[[Page1]] [[Page2]]", self.c)
+#        self.log.debug("value : `%s`" % self.p.buffer.value)
+#        eq_(u"[Page1] [Page2]", self.p.buffer.value.rstrip(), "link complex")
+#
     def testListSimple(self):
         self.p.parse_text(u"""\
 - bullet1

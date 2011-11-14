@@ -65,6 +65,7 @@ class BaseParser(object):
         self.__handler = None
         self.__buffer = ConvertingBuffer()
         self.__append_enabled = True
+        self.__inline_only = False
 
         for pattern in patterns:
             pattern['regexp'] = re.compile(pattern['pattern'])
@@ -100,26 +101,27 @@ class PukiwikiParser(BaseParser):
             ##############
             # blocks
             ##############
-            { 'pattern': r'^(\*+)(.*)', 'callback': self.heading, 'block': True },
-            { 'pattern': r'^#contents', 'callback': self.toc, 'block': True },
-            { 'pattern': r"^\|(.*)\|h$", 'callback': self.table_header_columns, 'block': True },
-            { 'pattern': r"^\|(.*)\|$", 'callback': self.table_columns, 'block': True },
-            { 'pattern': r"^ (.+)$",    'callback': self.formatted_text, 'block': True },
-            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list,'block': True },
+            { 'pattern': r'^(\*+)(.*)',     'callback': self.heading },
+            { 'pattern': r'^#contents',     'callback': self.toc },
+            { 'pattern': r"^\|(.*)\|h$",    'callback': self.table_header_columns },
+            { 'pattern': r"^\|(.*)\|$",     'callback': self.table_columns },
+            { 'pattern': r"^ (.+)$",        'callback': self.formatted_text },
+            { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list },
 
             ##############
-            # text effects
+            # inline
             ##############
-            { 'pattern': r"'''(.*?)'''(.*)",   'callback': self.italic },
-            { 'pattern': r"''(.*?)''(.*)",     'callback':  self.strong },
-            { 'pattern': r"%%(.*?)%%(.*)",     'callback':  self.strike_through },
-            { 'pattern': r"\[\[(.*?)\]\](.*)", 'callback': self.link },
+            { 'pattern': r"'''(.*?)'''(.*)",   'callback': self.italic, 'inline': True },
+            { 'pattern': r"''(.*?)''(.*)",     'callback':  self.strong, 'inline': True },
+            { 'pattern': r"%%(.*?)%%(.*)",     'callback':  self.strike_through, 'inline': True },
+            { 'pattern': r"\[\[(.*?)\]\](.*)", 'callback': self.link, 'inline': True  },
 
             # no underline
             
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
         self.__append_enabled = True
+        self.__inline_only = False
         self.formatted_text_buffer = ''
 
     def append(self, text):
@@ -156,6 +158,7 @@ class PukiwikiParser(BaseParser):
                 raise ParseError("Invalid list character: '%s'" % char)
 
         s = self.handler.at_list(types)
+        self.__inline_only = True
         return s, groups[1]
 
     def table_header_columns(self, groups):
@@ -190,9 +193,9 @@ class PukiwikiParser(BaseParser):
 
     def formatted_text(self, groups):
         text = groups[0]
-        self.log.debug("formatted_text = `%s`" % (text))
         self.formatted_text_buffer += text + '\n'
         self.__append_enabled = False
+        # 整形済みテキストの場合は現在の行はパースしない
         return '', ''
 
     def italic(self, groups):
@@ -225,12 +228,14 @@ class PukiwikiParser(BaseParser):
             self.formatted_text_buffer = ''
             self.__append_enabled = True
 
+
     def parse_text(self, text, handler):
         self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
             if self.__append_enabled:
                 self.append(self.handler.at_new_line())
+            self.__inline_only = False
         self.flush_buffers()
 
     def parse_line(self, line, handler):
@@ -242,8 +247,8 @@ class PukiwikiParser(BaseParser):
         while len(text) != 0:
             matched = None
 
-            for pattern in self.patterns:
-                pattern, regexp, callback, block = pattern['pattern'], pattern['regexp'], pattern['callback'], pattern.get('block')
+            for p in self.patterns:
+                pattern, regexp, callback, inline = p['pattern'], p['regexp'], p['callback'], p.get('inline')
                 if regexp is None:
                     self.log.error("regexp is None for `%s`" % pattern)
                     continue
@@ -251,14 +256,18 @@ class PukiwikiParser(BaseParser):
                     self.log.error("callback is None for `%s`" % pattern)
                     continue
 
-                if matched_count > 0 and block == True:
-                    # 2回目以降はblock以外のパターンのみパターンマッチさせる
+                if self.__inline_only and not inline:
+                    # インライン用のパターン以外は無視
+                    self.log.debug("`%s` ignored. inline only." % pattern)
+                    continue
+                elif matched_count > 0 and not inline:
+                    # 2回目以降はインラインではない場合スルー
+                    self.log.debug("`%s` ignored. inline only." % pattern)
                     continue
 
                 matched = regexp.match(text)
-                self.log.debug("pattern = `%s`, text = `%s`, matched = `%s`, %d times" % (pattern, text, matched, matched_count))
+                self.log.debug("`%s` -> `%s`, matched = `%s`" % (pattern, text, matched))
                 if matched:
-                    self.log.debug("`%s` matched for `%s`" % (pattern, text))
                     # 正規表現にマッチしたら登録されているコールバックを呼ぶ
                     converted, text = callback(matched.groups())
                     if self.__append_enabled:
@@ -269,13 +278,12 @@ class PukiwikiParser(BaseParser):
                     break
 
             if matched is None:
-                self.log.debug("normal text = `%s`" % (text))
-                converted, text = self.normal_text(text)
+                converted, t = self.normal_text(text)
+                self.log.debug("normal_text(): `%s` -> `%s`, `%s`" % (text, converted, t))
+                text = t
                 if self.__append_enabled:
                     self.append(converted)
                 result += converted
                 self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
 
         return result
-# `'''hogehoge''' テキスト`
-# ` テキスト`
