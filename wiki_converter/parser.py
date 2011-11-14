@@ -58,15 +58,15 @@ class ConvertingBuffer(object):
 
 class BaseParser(object):
     def __init__(self, patterns, log):
-        self.__log = log
+        self._log = log
         self.__handler = None
-        self.__buffer = ConvertingBuffer()
-        self.__append_enabled = True
-        self.__inline_only = False
+        self._buffer = ConvertingBuffer()
+        self._append_enabled = True
+        self._inline_only = False
 
         for pattern in patterns:
             pattern['regexp'] = re.compile(pattern['pattern'])
-        self.__patterns = patterns
+        self._patterns = patterns
 
     def parse_text(self, text, handler):
         pass
@@ -79,15 +79,15 @@ class BaseParser(object):
 
     @property
     def log(self):
-        return self.__log
+        return self._log
 
     @property
     def patterns(self):
-        return self.__patterns
+        return self._patterns
 
     @property
     def buffer(self):
-        return self.__buffer
+        return self._buffer
 
     handler = property(get_handler, set_handler)
 
@@ -117,7 +117,6 @@ class PukiwikiParser(BaseParser):
             
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
-        self.__append_enabled = True
         self.formatted_text_buffer = ''
 
     def append(self, text):
@@ -154,7 +153,7 @@ class PukiwikiParser(BaseParser):
                 raise ParseError("Invalid list character: '%s'" % char)
 
         s = self.handler.at_list(types)
-        self.__inline_only = True
+        self._inline_only = True
         return s, groups[1]
 
     def table_header_columns(self, groups):
@@ -162,12 +161,12 @@ class PukiwikiParser(BaseParser):
         self.log.debug("line = `%s`" % (line))
 
         columns = []
-        self.__append_enabled = False
+        self._append_enabled = False
         for text in line.split('|'):
             text = text.strip()
             if text:
                 columns.append(self.parse_line(text, self.handler))
-        self.__append_enabled = True
+        self._append_enabled = True
 
         s = self.handler.at_table_header_columns(columns)
         return s, ''
@@ -177,20 +176,20 @@ class PukiwikiParser(BaseParser):
         self.log.debug("line = `%s`" % (line))
 
         columns = []
-        self.__append_enabled = False
+        self._append_enabled = False
         for text in line.split('|'):
             text = text.strip()
             if text:
-                self.__append_enabled = False
+                self._append_enabled = False
                 columns.append(self.parse_line(text, self.handler))
-        self.__append_enabled = True
+        self._append_enabled = True
         s = self.handler.at_table_columns(columns)
         return s, ''
 
     def formatted_text(self, groups):
         text = groups[0]
         self.formatted_text_buffer += text + '\n'
-        self.__append_enabled = False
+        self._append_enabled = False
         # 整形済みテキストの場合は現在の行はパースしない
         return '', ''
 
@@ -222,16 +221,16 @@ class PukiwikiParser(BaseParser):
             self.append(s)
             # 整形済みテキストが終わったのでバッファクリア
             self.formatted_text_buffer = ''
-            self.__append_enabled = True
+            self._append_enabled = True
 
 
     def parse_text(self, text, handler):
         self.handler = handler
         for line in text.split('\n'):
             self.parse_line(line.rstrip(), handler)
-            if self.__append_enabled:
+            if self._append_enabled:
                 self.append(self.handler.at_new_line())
-            self.__inline_only = False
+            self._inline_only = False
         self.flush_buffers()
 
     def parse_line(self, line, handler):
@@ -252,7 +251,7 @@ class PukiwikiParser(BaseParser):
                     self.log.error("callback is None for `%s`" % pattern)
                     continue
 
-                if self.__inline_only and not inline:
+                if self._inline_only and not inline:
                     # インライン用のパターン以外は無視
                     self.log.debug("`%s` ignored. inline only." % pattern)
                     continue
@@ -266,7 +265,7 @@ class PukiwikiParser(BaseParser):
                 if matched:
                     # 正規表現にマッチしたら登録されているコールバックを呼ぶ
                     converted, text = callback(matched.groups())
-                    if self.__append_enabled:
+                    if self._append_enabled:
                         self.append(converted)
                     result += converted
                     self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
@@ -277,7 +276,7 @@ class PukiwikiParser(BaseParser):
                 converted, t = self.normal_text(text)
                 self.log.debug("normal_text(): `%s` -> `%s`, `%s`" % (text, converted, t))
                 text = t
-                if self.__append_enabled:
+                if self._append_enabled:
                     self.append(converted)
                 result += converted
                 self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
