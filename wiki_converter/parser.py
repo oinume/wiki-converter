@@ -12,9 +12,6 @@ text = parser.converted_text
 # TODO
 # lsx -> sorted-children or pagetree2
 # *の[#hash]は消していい
-# -[Page]ほげ
-# みたいなのを処理するとき、リストに入ったら__inline_onlyのフラグを立てて、インラインのパターンのみ実行する
-# 行の最後まで来たら __inline_only のフラグを外す
 
 # blocks
 #  heading
@@ -121,7 +118,6 @@ class PukiwikiParser(BaseParser):
         ]
         super(PukiwikiParser, self).__init__(patterns, log)
         self.__append_enabled = True
-        self.__inline_only = False
         self.formatted_text_buffer = ''
 
     def append(self, text):
