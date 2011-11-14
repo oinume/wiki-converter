@@ -11,7 +11,6 @@ text = parser.converted_text
 
 # TODO
 # lsx -> sorted-children or pagetree2
-# *の[#hash]は消していい
 
 # blocks
 #  heading
@@ -135,7 +134,9 @@ class PukiwikiParser(BaseParser):
             return s, text[1:]
 
     def heading(self, groups):
-        s = self.handler.at_heading(groups[1], len(groups[0]))
+        #text = groups[1]
+        text = re.sub(r'\[#[\w]+\]', '', groups[1])
+        s = self.handler.at_heading(text, len(groups[0]))
         return s, ''
 
     def toc(self, groups):
@@ -279,6 +280,8 @@ class PukiwikiParser(BaseParser):
                 if self._append_enabled:
                     self.append(converted)
                 result += converted
+                matched_count += 1
                 self.log.debug("converted = `%s`, text = `%s`, buffer = `%s`, result = `%s`" % (converted, text, self.buffer.value, result))
+                
 
         return result

@@ -12,9 +12,11 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(DevelopmentConfig):
     TESTING = True
+    DEBUG = False
 
 class ProductionConfig(Config):
     PRODUCTION = True
+    DEBUG = False
 
 mode = os.environ.get('WIKI_CONVERTER_ENV', 'development')
 object = DevelopmentConfig

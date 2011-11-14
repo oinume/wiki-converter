@@ -11,17 +11,25 @@ class TestPukiwikiParser(unittest.TestCase):
         self.p = create_parser('pukiwiki', self.log)
         self.c = create_converter('confluence', self.log)
 
-    def testHeading(self):
+    def testHeading01(self):
         self.p.parse_text("* Heading1", self.c)
         eq_("h2. Heading1", self.p.buffer.value.rstrip(), 'heading1')
 
-        self.p.buffer.reset()
+    def testHeading02(self):
         self.p.parse_text(u"***ヘッディング3", self.c)
         eq_(u"h4.ヘッディング3", self.p.buffer.value.rstrip(), "heading3")
+
+    def testHeading03(self):
+        self.p.parse_text("* Heading1 [#12345d]", self.c)
+        eq_("h2. Heading1", self.p.buffer.value.rstrip(), "heading1")
 
     def testToc(self):
         self.p.parse_text(u"#contents", self.c)
         eq_(u"{toc}", self.p.buffer.value.rstrip(), "toc")
+
+    def testNormalText(self):
+        self.p.parse_text(u"MHA. for quality campaing.", self.c)
+        eq_("MHA. for quality campaing.", self.p.buffer.value.rstrip(), "normal text")
 
     def testTableColumns(self):
         self.p.parse_text(u"| Hoge | Fuga |", self.c)

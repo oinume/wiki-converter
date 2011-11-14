@@ -30,7 +30,7 @@ def process():
     parser = wiki_converter.function.create_parser('pukiwiki', log)
     converter = wiki_converter.function.create_converter('confluence', log)
     parser.parse_text(source, converter)
-    log.debug('=== converted === \n%s' % (parser.buffer.value))
+    #log.debug('=== converted === \n%s' % (parser.buffer.value))
 
     return render_template(
         'complete.html',
