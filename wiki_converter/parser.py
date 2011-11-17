@@ -209,7 +209,7 @@ class PukiwikiParser(BaseParser):
     def link(self, groups):
         self.log.debug("link = `%s`" % (groups[0]))
         link = groups[0]
-        array = re.split('[\|:>]?', link)
+        array = re.split('[\|:>]?', link, 1)
         text = array[0]
         url = ''.join(array[1:])
         self.log.debug("text = `%s`, url = `%s`" % (text, url))

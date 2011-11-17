@@ -87,19 +87,20 @@ text.
         self.p.parse_text(u"''Strong text.'' Normal text.", self.c)
         eq_(u"*Strong text.* Normal text.", self.p.buffer.value.rstrip(), "strong")
 
+    def testLinkWithPort(self):
+        self.p.parse_text(u"[[Link:http://www.mydomain.jp:8080/admin]]", self.c)
+        eq_(u"[Link|http://www.mydomain.jp:8080/admin]", self.p.buffer.value.rstrip(), "link")
+
     def testLinkWithAlias(self):
         self.p.parse_text(u"[[リンクテスト|http://www.ameba.jp]]", self.c)
-        self.log.debug("value : `%s`" % self.p.buffer.value)
-        eq_(u"[リンクテスト|http//www.ameba.jp]", self.p.buffer.value.rstrip(), "link with alias")
+        eq_(u"[リンクテスト|http://www.ameba.jp]", self.p.buffer.value.rstrip(), "link with alias")
 
     def testLinkWithoutAlias(self):
         self.p.parse_text(u"[[LinkPage]]", self.c)
-        self.log.debug("value : `%s`" % self.p.buffer.value)
         eq_(u"[LinkPage]", self.p.buffer.value.rstrip(), "link without alias")
 
     def testLinkComplex(self):
         self.p.parse_text(u"[[Page1]] [[Page2]]", self.c)
-        self.log.debug("value : `%s`" % self.p.buffer.value)
         eq_(u"[Page1] [Page2]", self.p.buffer.value.rstrip(), "link complex")
 
     def testListSimple(self):
