@@ -154,6 +154,8 @@ class PukiwikiParser(BaseParser):
                 raise ParseError("Invalid list character: '%s'" % char)
 
         s = self.handler.at_list(types)
+        if not re.match('^ ', groups[1]):
+            s += ' '
         self._inline_only = True
         return s, groups[1]
 

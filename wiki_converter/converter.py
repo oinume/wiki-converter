@@ -39,7 +39,6 @@ class ConfluecenConverter(DefaultHandler):
         return u'{toc}'
 
     def at_list(self, types):
-        self.log.debug("types = `%s`", str(types))
         s = ''
         for i, type in enumerate(types):
             if type == LIST_TYPE_BULLET:

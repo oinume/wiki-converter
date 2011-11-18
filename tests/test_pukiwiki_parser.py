@@ -149,7 +149,7 @@ test
 
     def testListSimple(self):
         self.p.parse_text(u"""\
-- bullet1
+-bullet1
 -- bullet2
 -+ bullet + number1
 -+ bullet + number2
