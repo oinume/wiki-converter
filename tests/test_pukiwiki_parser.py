@@ -79,6 +79,50 @@ text.
             "formatted_text",
         )
 
+    def testFormattedText2(self):
+        self.p.parse_text(u"""\
+ test
+
+** heading1
+** heading2
+""".rstrip(), self.c)
+
+        eq_(u"""\
+{code}
+test
+{code}
+h3. heading1
+h3. heading2
+""".rstrip(), self.p.buffer.value.rstrip(), "formatted text bug")
+
+    def testFormattedText3(self):
+        self.p.parse_text(u"""\
+ test
+
+hoge
+""".rstrip(), self.c)
+        
+        eq_(u"""\
+{code}
+test
+{code}
+hoge
+""".rstrip(), self.p.buffer.value.rstrip(), "formatted text bug")
+
+    def testFormattedText4(self):
+        self.p.parse_text(u"""\
+ test
+
+''strong''
+""".rstrip(), self.c)
+        
+        eq_(u"""\
+{code}
+test
+{code}
+*strong*
+""".rstrip(), self.p.buffer.value.rstrip(), "formatted text bug")
+
     def testItalic(self):
         self.p.parse_text(u"'''Italic text.''' Normal text.", self.c)
         eq_(u"_Italic text._ Normal text.", self.p.buffer.value.rstrip(), "italic")
@@ -127,3 +171,4 @@ text.
     def testListComplex(self):
         self.p.parse_text(u"- page:[[page1]]", self.c)
         eq_(u"* page:[page1]", self.p.buffer.value.rstrip(), "list with a link")
+

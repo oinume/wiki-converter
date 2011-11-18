@@ -101,7 +101,7 @@ class PukiwikiParser(BaseParser):
             { 'pattern': r'^#contents',     'callback': self.toc },
             { 'pattern': r"^\|(.*)\|h$",    'callback': self.table_header_columns },
             { 'pattern': r"^\|(.*)\|$",     'callback': self.table_columns },
-            { 'pattern': r"^ (.+)$",        'callback': self.formatted_text },
+            { 'pattern': r"^ (.+)$",        'callback': self.formatted_text, 'formatted_text': True },
             { 'pattern': r'^([\-\+]+)(.*)', 'callback': self.list },
 
             ##############
@@ -122,7 +122,6 @@ class PukiwikiParser(BaseParser):
         self.buffer.append(text)
 
     def normal_text(self, text):
-        self.flush_buffers()
         if len(text) == 0:
             return ''
         # 1文字分切りだす
@@ -136,6 +135,7 @@ class PukiwikiParser(BaseParser):
     def heading(self, groups):
         #text = groups[1]
         text = re.sub(r'\[#[\w]+\]', '', groups[1])
+        self.log.debug("heading = {%s}" % (text))
         s = self.handler.at_heading(text, len(groups[0]))
         return s, ''
 
@@ -223,6 +223,7 @@ class PukiwikiParser(BaseParser):
             # 整形済みテキストが終わったのでバッファクリア
             self.formatted_text_buffer = ''
             self._append_enabled = True
+            self.log.debug("flush_buffers(): formatted_text_buffer")
 
 
     def parse_text(self, text, handler):
@@ -264,6 +265,10 @@ class PukiwikiParser(BaseParser):
                 matched = regexp.match(text)
                 self.log.debug("`%s` -> `%s`, matched = `%s`" % (pattern, text, matched))
                 if matched:
+                    if not p.get('formatted_text'):
+                        # formatted_textのバッファをフラッシュする
+                        self.flush_buffers()
+
                     # 正規表現にマッチしたら登録されているコールバックを呼ぶ
                     converted, text = callback(matched.groups())
                     if self._append_enabled:
@@ -274,6 +279,7 @@ class PukiwikiParser(BaseParser):
                     break
 
             if matched is None:
+                self.flush_buffers()
                 converted, t = self.normal_text(text)
                 self.log.debug("normal_text(): `%s` -> `%s`, `%s`" % (text, converted, t))
                 text = t
