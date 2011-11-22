@@ -9,5 +9,9 @@ app.config.from_object(wiki_converter.config.object)
 app.logger.info("config.object = %s" % wiki_converter.config.object)
 
 from wiki_converter.views import root
+from wiki_converter.views import pukiwiki
+
 app.register_blueprint(root.app)
+app.register_blueprint(pukiwiki.app)
+
 

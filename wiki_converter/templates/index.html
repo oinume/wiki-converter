@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
 <h1>Wikiのソースを入力</h1>
-<form action="/process" method="post">
+<form action="/{{ type }}/process" method="post">
 <div class="clearfix">
 <div class="input">
 <textarea name="source" class="xxlarge" rows="20" cols="100"></textarea>
