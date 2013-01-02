@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from wiki_converter.handler import (
+from .handler import (
     DefaultHandler,
     LIST_TYPE_NUMBERED,
     LIST_TYPE_BULLET
 )
-from wiki_converter.log import create_logger
+from .log import create_logger
 
 class ConfluecenConverter(DefaultHandler):
     def __init__(self, log=create_logger()):

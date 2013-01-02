@@ -2,15 +2,20 @@
 
 {% block content %}
 <div class="container">
-<h1>Wikiのソースを入力</h1>
-<form action="/{{ type }}/process" method="post">
+<h1>{{ parser }}のソースを入力</h1>
+<form action="/process" method="post">
 <div class="clearfix">
 <div class="input">
-<textarea name="source" class="xxlarge" rows="20" cols="100"></textarea>
+<textarea name="source" class="span8" rows="20"></textarea>
 </div>
 </div>
 <div class="actions">
-<input class="btn primary" type="submit" value="Save changes">
+{%- if converter == 'confluence' -%}
+<label class="checkbox"><input type="checkbox" name="prefer_h1" value="1">見出しをh1から始める</label>
+{%- endif -%}
+<input class="btn btn-primary" type="submit" value="変換する">
+<input type="hidden" name="parser" value="{{ parser }}">
+<input type="hidden" name="converter" value="{{ converter }}">
 </div>
 </form>
 </div><!-- /div.container -->
