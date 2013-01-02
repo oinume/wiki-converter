@@ -7,7 +7,15 @@ def set_sys_path(file):
 
 set_sys_path(__file__)
 #print sys.path
-from wiki_converter import app
+
+from bottle import run
+from wiki_converter.webapp import app
+from wiki_converter.config import config
+from wiki_converter.views import root, confluence, ameblo
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=app.config['DEBUG'])
+    #print config
+    run(app,
+        host=config['host'], port=config['port'],
+        debug=config['debug'], reloader=config['reloader'],
+        server=config['server'])

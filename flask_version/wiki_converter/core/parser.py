@@ -24,9 +24,9 @@ text = parser.converted_text
 #  link
 
 import re
-from wiki_converter.common import ParseError
-from wiki_converter.log import create_logger
-from wiki_converter.handler import LIST_TYPE_BULLET, LIST_TYPE_NUMBERED
+from .common import ParseError
+from .log import create_logger
+from .handler import LIST_TYPE_BULLET, LIST_TYPE_NUMBERED
 
 class ConvertingBuffer(object):
     def __init__(self):

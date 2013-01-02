@@ -1,5 +1,5 @@
-from wiki_converter.parser import *
-from wiki_converter.converter import *
+from .parser import *
+from .converter.confluence import *
 
 type2parser = {
     'pukiwiki': PukiwikiParser,

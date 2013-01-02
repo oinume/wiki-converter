@@ -1,4 +1,12 @@
-h1. pages
-* index
-* complete
+h2. static
+* /static/
+** /static/lib/{css,img,js}
 
+h2. to confluence pages
+* /confluence/pukiwiki
+** pukiwiki -> confluence
+* /confluence/complete
+
+h2. to ameblo pages
+* /ameblo/index
+* /ameblo/complete

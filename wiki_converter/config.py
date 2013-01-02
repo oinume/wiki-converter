@@ -1,30 +1,40 @@
 import os
 
-class Config(object):
-    DEBUG = False
-    SECRET_KEY = 'dev_key_h8hfne89vm'
-    CSRF_ENABLED = True
-    CSRF_SESSION_LKEY = 'dev_key_h8asSNJ9s9=+'
-
-class DevelopmentConfig(Config):
-    DEVELOPMENT = True
-    DEBUG = True
-
-class TestingConfig(DevelopmentConfig):
-    TESTING = True
-    DEBUG = False
-
-class ProductionConfig(Config):
-    PRODUCTION = True
-    DEBUG = False
+config_common = {
+    'debug': False,
+    'reloader': False,
+}
+config_development = {
+    'host': '0.0.0.0',
+    'port': 5000,
+    'debug': True,
+    'reloader': True,
+    'server': 'wsgiref',
+}
+config_testing = {
+    'host': '0.0.0.0',
+    'port': 5000,
+    'debug': True,
+    'reloader': True,
+    'server': 'gunicorn',
+}
+config_production = {
+    'host': '0.0.0.0',
+    'port': 8081,
+    'debug': False,
+    'reloader': False,
+    'server': 'gunicron',
+}
 
 mode = os.environ.get('WIKI_CONVERTER_ENV', 'development')
-object = DevelopmentConfig
+config_env = None
 if mode == 'development':
-    object = DevelopmentConfig
+    config_env = config_development
 elif mode == 'testing':
-    object = TestingConfig
+    config_env = config_testing
 elif mode == 'production':
-    object = ProductionConfig
+    config_env = config_production
 else:
-    raise ValueError("Unknown config mode.")
+    raise ValueError("Unknown config mode: " + mode)
+
+config = dict(config_common.items() + config_env.items())

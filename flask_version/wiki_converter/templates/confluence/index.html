@@ -1,0 +1,17 @@
+{% extends '_layout.html' %}
+
+{% block content %}
+<div class="container">
+<h1>Wikiのソースを入力</h1>
+<form action="/confluence/process" method="post">
+<div class="clearfix">
+<div class="input">
+<textarea name="source" class="span8" rows="20"></textarea>
+</div>
+</div>
+<div class="actions">
+<input class="btn primary" type="submit" value="変換！">
+</div>
+</form>
+</div><!-- /div.container -->
+{% endblock %}
